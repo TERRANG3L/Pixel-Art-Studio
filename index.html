@@ -68,6 +68,11 @@
             <button onclick="clearGrid()">🧹 Limpiar</button>
             <button onclick="saveArt()">💾 Guardar</button>
         </div>
+
+        <!-- Nuevo input para cargar imágenes -->
+        <div class="image-loader">
+            <input type="file" id="imageLoader" accept="image/*" style="margin-top: 15px; width: 100%;">
+        </div>
     </div>
 
     <div class="main-area">
@@ -78,7 +83,6 @@
             <input type="number" id="cols" value="16" min="8" max="64" onchange="safeUpdateGrid()">
             <span>x</span>
             <input type="number" id="rows" value="16" min="8" max="64" onchange="safeUpdateGrid()">
-            </span>
             <button onclick="safeUpdateGrid()">Actualizar</button>
         </div>
     </div>
