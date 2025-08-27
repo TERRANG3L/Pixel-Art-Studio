@@ -1,4 +1,3 @@
-// app.js
 let lastValidState = {
     rows: 16,
     cols: 16
@@ -24,7 +23,8 @@ const dom = {
     colorPreview: document.getElementById('colorPreview'),
     confirmDialog: document.getElementById('confirmDialog'),
     paletteSelector: document.getElementById('paletteSelector'),
-    zoomLevel: document.getElementById('zoomLevel')
+    zoomLevel: document.getElementById('zoomLevel'),
+    symmetryStatus: document.getElementById('symmetryStatus') // Asegúrate de tener este elemento en tu HTML
 };
 
 function safeUpdateGrid() {
@@ -36,7 +36,7 @@ function safeUpdateGrid() {
         dom.grid.className = state.gridVisible ? 'grid-visible' : '';
         
         const fragment = document.createDocumentFragment();
-        for(let i = 0; i < rows * cols; i++) {
+        for (let i = 0; i < rows * cols; i++) {
             fragment.appendChild(createPixel());
         }
         
@@ -50,7 +50,7 @@ function safeUpdateGrid() {
         };
 
         dom.grid.style.display = 'none';
-        dom.grid.offsetHeight;
+        dom.grid.offsetHeight; // Forzar el reflow
         dom.grid.style.display = 'grid';
         
     } catch (error) {
@@ -118,11 +118,10 @@ function startDrawing(e) {
 }
 
 function handleDrawing(pixel) {
-    if(!state.isDrawing || !pixel?.classList?.contains('pixel')) return;
+    if (!state.isDrawing || !pixel?.classList?.contains('pixel')) return;
     
     applyColor(pixel);
-    if(state.mirrorMode.active) applyMirrorEffect(pixel);
-    if(state.symmetricGrid) applySymmetry(pixel);
+    if (state.mirrorMode.active) applyMirrorEffect(pixel);
 }
 
 function stopDrawing() {
@@ -134,7 +133,7 @@ function applySymmetry(pixel) {
     const total = dom.grid.children.length;
     const mirrorIndex = total - 1 - index;
     
-    if(mirrorIndex >= 0 && mirrorIndex < total) {
+    if (mirrorIndex >= 0 && mirrorIndex < total) {
         applyColor(dom.grid.children[mirrorIndex]);
     }
 }
@@ -145,7 +144,7 @@ function applyMirrorEffect(originalPixel) {
     const rows = parseInt(document.getElementById('rows').value);
     const mirrorIndices = [];
 
-    switch(state.mirrorMode.type) {
+    switch (state.mirrorMode.type) {
         case 'vertical':
             mirrorIndices.push(Math.floor(index / cols) * cols + (cols - 1 - (index % cols)));
             break;
@@ -161,16 +160,16 @@ function applyMirrorEffect(originalPixel) {
     }
 
     mirrorIndices.forEach(idx => {
-        if(dom.grid.children[idx]) {
+        if (dom.grid.children[idx]) {
             applyColor(dom.grid.children[idx]);
         }
     });
 }
 
 function applyColor(pixel) {
-    if(!pixel) return;
+    if (!pixel) return;
     
-    switch(state.currentTool) {
+    switch (state.currentTool) {
         case 'brush':
             pixel.style.backgroundColor = state.currentColor;
             break;
@@ -189,28 +188,28 @@ function applyColor(pixel) {
 
 function floodFill(startPixel) {
     const targetColor = startPixel.style.backgroundColor;
-    if(targetColor === state.currentColor) return;
+    if (targetColor === state.currentColor) return;
     
     const queue = [startPixel];
     const visited = new Set();
     const cols = parseInt(document.getElementById('cols').value);
     
-    while(queue.length > 0) {
+    while (queue.length > 0) {
         const current = queue.shift();
-        if(!visited.has(current) && current.style.backgroundColor === targetColor) {
+        if (!visited.has(current) && current.style.backgroundColor === targetColor) {
             current.style.backgroundColor = state.currentColor;
             visited.add(current);
             
             const index = Array.from(dom.grid.children).indexOf(current);
             const neighbors = [];
             
-            if(index % cols > 0) neighbors.push(index - 1);
-            if(index % cols < cols - 1) neighbors.push(index + 1);
-            if(index >= cols) neighbors.push(index - cols);
-            if(index < dom.grid.children.length - cols) neighbors.push(index + cols);
+            if (index % cols > 0) neighbors.push(index - 1); // izquierda
+            if (index % cols < cols - 1) neighbors.push(index + 1); // derecha
+            if (index >= cols) neighbors.push(index - cols); // arriba
+            if (index < dom.grid.children.length - cols) neighbors.push(index + cols); // abajo
             
             neighbors.forEach(idx => {
-                if(!visited.has(dom.grid.children[idx])) {
+                if (!visited.has(dom.grid.children[idx])) {
                     queue.push(dom.grid.children[idx]);
                 }
             });
@@ -224,7 +223,7 @@ function updateColorPreview() {
 
 function addToPalette() {
     const hexColor = rgbToHex(state.currentColor);
-    if(!state.paletas[state.currentPalette].includes(hexColor)) {
+    if (!state.paletas[state.currentPalette].includes(hexColor)) {
         state.paletas[state.currentPalette].push(hexColor);
         renderPalette();
         savePalettes();
@@ -238,18 +237,18 @@ function deleteColor(colorElement) {
     };
     const rect = document.querySelector('.color-picker').getBoundingClientRect();
     dom.confirmDialog.style.top = `${rect.bottom + 10}px`;
-    dom.confirmDialog.style.left = `${rect.left + (rect.width/2 - 100)}px`;
+    dom.confirmDialog.style.left = `${rect.left + (rect.width / 2 - 100)}px`;
     dom.confirmDialog.style.display = 'block';
 }
 
 function handleConfirm(response) {
     dom.confirmDialog.style.display = 'none';
-    if(response && state.deleteQueue) {
+    if (response && state.deleteQueue) {
         const colorIndex = state.paletas[state.currentPalette].findIndex(c => 
             rgbToHex(c) === state.deleteQueue.color || c === state.deleteQueue.color
         );
         
-        if(colorIndex > -1) {
+        if (colorIndex > -1) {
             state.paletas[state.currentPalette].splice(colorIndex, 1);
             state.deleteQueue.element.remove();
             savePalettes();
@@ -262,10 +261,10 @@ function rgbToHex(rgb) {
     if (!rgb) return '#000000';
     if (rgb.startsWith('#')) return rgb.toLowerCase();
     
-    const values = rgb.match(/\d+/g)?.map(Number) || [0,0,0];
+    const values = rgb.match(/\d+/g)?.map(Number) || [0, 0, 0];
     return '#' + values.map(x => {
-        const hex = x.toString(16);
-        return hex.length === 1 ? '0' + hex : hex;
+        const hex = x.toString(16).padStart(2, '0');
+        return hex;
     }).join('');
 }
 
@@ -276,7 +275,7 @@ function toggleGrid() {
 
 function toggleSymmetry() {
     state.symmetricGrid = !state.symmetricGrid;
-    dom.symmetryStatus.textContent = state.symmetricGrid ? "Desactivar Simetria" : "Activar Simetria";
+    dom.symmetryStatus.textContent = state.symmetricGrid ? "Desactivar Simetría" : "Activar Simetría";
     safeUpdateGrid();
 }
 
@@ -325,7 +324,7 @@ function initPalettes() {
 
 function newPalette() {
     const name = prompt('Nombre de la nueva paleta:');
-    if(name && !state.paletas[name]) {
+    if (name && !state.paletas[name]) {
         state.paletas[name] = [];
         state.currentPalette = name;
         initPalettes();
