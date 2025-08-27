@@ -88,11 +88,21 @@ input[type="color"] {
     overflow: auto;
 }
 
-#gridContainer {
-    transform-origin: center center;
-    transition: transform 0.2s;
-    margin: auto;
+#grid-container {
+  width: 100%;
+  max-width: 500px;
+  height: auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
+
+#grid-container img {
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
 
 #grid {
     display: grid;
