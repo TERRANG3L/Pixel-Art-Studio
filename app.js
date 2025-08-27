@@ -338,6 +338,52 @@ function changePalette(name) {
     renderPalette();
 }
 
+const imageLoader = document.getElementById('imageLoader');
+
+imageLoader.addEventListener('change', handleImageUpload);
+
+function handleImageUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const img = new Image();
+        img.src = e.target.result;
+        img.onload = function() {
+            loadImageToGrid(img);
+        };
+    };
+    reader.readAsDataURL(file);
+}
+
+function loadImageToGrid(image) {
+    const cols = parseInt(document.getElementById('cols').value);
+    const rows = parseInt(document.getElementById('rows').value);
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+
+    // Ajustar el tamaño del canvas a la cuadrícula
+    canvas.width = cols;
+    canvas.height = rows;
+    ctx.drawImage(image, 0, 0, cols, rows);
+
+    // Obtener los datos de píxeles
+    const imageData = ctx.getImageData(0, 0, cols, rows);
+    const pixels = imageData.data;
+
+    // Limpiar la cuadrícula existente
+    dom.grid.innerHTML = '';
+
+    // Crear los píxeles en la cuadrícula
+    for (let i = 0; i < pixels.length; i += 4) {
+        const pixel = createPixel();
+        const color = `rgba(${pixels[i]}, ${pixels[i + 1]}, ${pixels[i + 2]}, ${pixels[i + 3] / 255})`;
+        pixel.style.backgroundColor = color;
+        dom.grid.appendChild(pixel);
+    }
+}
+
 function renderPalette() {
     const container = document.getElementById('colorPalette');
     container.innerHTML = state.paletas[state.currentPalette].map(color => `
