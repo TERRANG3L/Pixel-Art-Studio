@@ -1,91 +1,92 @@
+/* Estilos generales */
 :root {
-    --primary: #4a90e2;
-    --secondary: #7ed321;
-    --background: #2d2d37;
-    --panel: #3a3a4a;
-    --text: #f0f0f5;
+  --primary: #4a90e2;
+  --secondary: #7ed321;
+  --background: #2d2d37;
+  --panel: #3a3a4a;
+  --text: #f0f0f5;
 }
 
 body {
-    display: grid;
-    grid-template-columns: 220px 1fr;
-    margin: 0;
-    min-height: 100vh;
-    background: var(--background);
-    font-family: 'Segoe UI', system-ui;
-    color: var(--text);
-    overflow: hidden;
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  margin: 0;
+  min-height: 100vh;
+  background: var(--background);
+  font-family: 'Segoe UI', system-ui;
+  color: var(--text);
+  overflow: hidden;
 }
 
 .tool-panel {
-    background: var(--panel);
-    padding: 20px;
-    border-right: 2px solid #25252d;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    overflow-y: auto;
-    position: relative;
+  background: var(--panel);
+  padding: 20px;
+  border-right: 2px solid #25252d;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow-y: auto;
+  position: relative;
 }
 
 .color-picker {
-    background: #40404d;
-    padding: 15px;
-    border-radius: 12px;
-    margin-bottom: 20px;
-    position: relative;
+  background: #40404d;
+  padding: 15px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  position: relative;
 }
 
 .color-preview {
-    width: 100%;
-    height: 60px;
-    border-radius: 8px;
-    margin-bottom: 15px;
-    border: 2px solid var(--text);
+  width: 100%;
+  height: 60px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  border: 2px solid var(--text);
 }
 
 input[type="color"] {
-    width: 100%;
-    height: 40px;
-    border: none;
-    background: none;
-    cursor: pointer;
+  width: 100%;
+  height: 40px;
+  border: none;
+  background: none;
+  cursor: pointer;
 }
 
 .tools-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
 }
 
 .tool-btn {
-    background: #40404d;
-    border: none;
-    padding: 15px;
-    border-radius: 8px;
-    cursor: pointer;
-    color: var(--text);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    transition: background 0.2s, box-shadow 0.2s;
+  background: #40404d;
+  border: none;
+  padding: 15px;
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  transition: background 0.2s, box-shadow 0.2s;
 }
 
 .tool-btn.active {
-    background: var(--primary);
-    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+  background: var(--primary);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
 }
 
 .main-area {
-    padding: 30px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 25px;
-    flex-grow: 1;
-    overflow: auto;
+  padding: 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 25px;
+  flex-grow: 1;
+  overflow: auto;
 }
 
 #grid-container {
@@ -95,6 +96,10 @@ input[type="color"] {
   display: flex;
   justify-content: center;
   align-items: center;
+  margin: 20px auto;
+  background-color: #f5f5f5;
+  padding: 20px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 #grid-container img {
@@ -103,164 +108,163 @@ input[type="color"] {
   object-fit: contain;
 }
 
-
 #grid {
-    display: grid;
-    gap: 0;
-    background: transparent;
-    margin: 20px auto;
+  display: grid;
+  gap: 0;
+  background: transparent;
+  margin: 20px auto;
 }
 
 .pixel {
-    width: 20px;
-    height: 20px;
-    background: #fff;
-    cursor: crosshair;
-    transition: background 0.1s;
-    border: 1px solid transparent;
-    -webkit-user-drag: none;
-    user-select: none;
+  width: 20px;
+  height: 20px;
+  background: #fff;
+  cursor: crosshair;
+  transition: background 0.1s;
+  border: 1px solid transparent;
+  -webkit-user-drag: none;
+  user-select: none;
 }
 
 .grid-visible .pixel {
-    border: 1px solid #4a4a5a;
+  border: 1px solid #4a4a5a;
 }
 
 .panel-controls {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 20px;
 }
 
 button {
-    padding: 10px 20px;
-    background: var(--primary);
-    border: none;
-    border-radius: 6px;
-    color: white;
-    cursor: pointer;
-    transition: filter 0.2s, transform 0.2s;
+  padding: 10px 20px;
+  background: var(--primary);
+  border: none;
+  border-radius: 6px;
+  color: white;
+  cursor: pointer;
+  transition: filter 0.2s, transform 0.2s;
 }
 
 button:hover {
-    filter: brightness(1.1);
-    transform: translateY(-1px);
+  filter: brightness(1.1);
+  transform: translateY(-1px);
 }
 
 .grid-config {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    position: relative;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  position: relative;
 }
 
 .color-swatch-container {
-    position: relative;
+  position: relative;
 }
 
 .delete-color {
-    position: absolute;
-    top: -5px;
-    right: -5px;
-    background: #ff4444;
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    display: none;
-    cursor: pointer;
-    border: 2px solid white;
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background: #ff4444;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: none;
+  cursor: pointer;
+  border: 2px solid white;
 }
 
 .color-swatch-container:hover .delete-color {
-    display: block;
+  display: block;
 }
 
 .color-swatch {
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    cursor: pointer;
-    border: 2px solid transparent;
-    transition: all 0.2s;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all 0.2s;
 }
 
 .color-swatch.selected {
-    border-color: var(--text);
-    transform: scale(1.1);
+  border-color: var(--text);
+  transform: scale(1.1);
 }
 
 .zoom-controls {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    background: var(--panel);
-    padding: 10px;
-    border-radius: 8px;
-    display: flex;
-    gap: 8px;
-    align-items: center;
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: var(--panel);
+  padding: 10px;
+  border-radius: 8px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
 }
 
 .symmetry-toggle {
-    cursor: pointer;
-    font-size: 1.2em;
-    display: flex;
-    align-items: center;
-    gap: 5px;
+  cursor: pointer;
+  font-size: 1.2em;
+  display: flex;
+  align-items: center;
+  gap: 5px;
 }
 
 .custom-confirm {
-    position: absolute;
-    background: var(--panel);
-    padding: 15px;
-    border-radius: 8px;
-    box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
-    z-index: 1000;
-    display: none;
-    min-width: 200px;
-    text-align: center;
+  position: absolute;
+  background: var(--panel);
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  display: none;
+  min-width: 200px;
+  text-align: center;
 }
 
 .paleta-container {
-    max-height: 300px;
-    overflow-y: auto;
+  max-height: 300px;
+  overflow-y: auto;
 }
 
 .paleta-selector {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 15px;
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
 }
 
 .paleta-selector select {
-    background: var(--background);
-    color: var(--text);
-    border: none;
-    padding: 5px 10px;
-    border-radius: 4px;
+  background: var(--background);
+  color: var(--text);
+  border: none;
+  padding: 5px 10px;
+  border-radius: 4px;
 }
 
 #symmetryStatus {
-    font-size: 0.8em;
-    color: var(--text);
+  font-size: 0.8em;
+  color: var(--text);
 }
 
 .mirror-controls {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 15px;
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
 }
 
 .mirror-controls button.active {
-    background: var(--secondary);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  background: var(--secondary);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .mirror-controls select {
-    background: var(--background);
-    color: var(--text);
-    border: none;
-    padding: 5px 10px;
-    border-radius: 4px;
+  background: var(--background);
+  color: var(--text);
+  border: none;
+  padding: 5px 10px;
+  border-radius: 4px;
 }
