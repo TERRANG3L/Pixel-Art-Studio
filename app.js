@@ -24,7 +24,17 @@ const dom = {
     confirmDialog: document.getElementById('confirmDialog'),
     paletteSelector: document.getElementById('paletteSelector'),
     zoomLevel: document.getElementById('zoomLevel'),
-    symmetryStatus: document.getElementById('symmetryStatus') // Asegúrate de tener este elemento en tu HTML
+    symmetryStatus: document.getElementById('symmetryStatus'),
+    confirmYes: document.getElementById('confirmYes'),
+    confirmNo: document.getElementById('confirmNo'),
+    newPaletteBtn: document.getElementById('newPaletteBtn'),
+    addToPaletteBtn: document.getElementById('addToPaletteBtn'),
+    toggleMirrorBtn: document.getElementById('toggleMirrorBtn'),
+    toggleGridBtn: document.getElementById('toggleGridBtn'),
+    clearGridBtn: document.getElementById('clearGridBtn'),
+    saveArtBtn: document.getElementById('saveArtBtn'),
+    imageLoader: document.getElementById('imageLoader'),
+    mirrorTypeSelector: document.getElementById('mirrorTypeSelector')
 };
 
 function safeUpdateGrid() {
@@ -34,27 +44,25 @@ function safeUpdateGrid() {
 
         dom.grid.style.gridTemplateColumns = `repeat(${cols}, 20px)`;
         dom.grid.className = state.gridVisible ? 'grid-visible' : '';
-        
+
         const fragment = document.createDocumentFragment();
         for (let i = 0; i < rows * cols; i++) {
             fragment.appendChild(createPixel());
         }
-        
+
         dom.grid.innerHTML = '';
         dom.grid.appendChild(fragment);
         state.isDrawing = false;
 
-        lastValidState = {
-            rows: rows,
-            cols: cols
-        };
+        lastValidState = { rows, cols };
 
         dom.grid.style.display = 'none';
         dom.grid.offsetHeight; // Forzar el reflow
         dom.grid.style.display = 'grid';
-        
+
     } catch (error) {
-        console.error('Error:', error);
+        console.error('Error al actualizar la cuadrícula:', error);
+        alert('Error al actualizar la cuadrícula. Se restaurarán los valores anteriores.');
         document.getElementById('rows').value = lastValidState.rows;
         document.getElementById('cols').value = lastValidState.cols;
         safeUpdateGrid();
@@ -65,13 +73,22 @@ function createPixel() {
     const pixel = document.createElement('div');
     pixel.className = 'pixel';
     pixel.draggable = false;
-    
+
     pixel.addEventListener('mousedown', startDrawing);
     pixel.addEventListener('mousemove', handleDrawing);
     pixel.addEventListener('touchstart', startDrawing);
     pixel.addEventListener('touchmove', handleTouchDrawing);
-    
+
     return pixel;
+}
+
+function handleTouchDrawing(e) {
+    e.preventDefault();
+    const touch = e.touches[0];
+    const pixel = document.elementFromPoint(touch.clientX, touch.clientY);
+    if (pixel?.classList?.contains('pixel')) {
+        handleDrawing(pixel);
+    }
 }
 
 function setupEventListeners() {
@@ -80,22 +97,34 @@ function setupEventListeners() {
         updateColorPreview();
     });
 
+    dom.confirmYes.addEventListener('click', () => handleConfirm(true));
+    dom.confirmNo.addEventListener('click', () => handleConfirm(false));
+
+    dom.newPaletteBtn.addEventListener('click', newPalette);
+    dom.addToPaletteBtn.addEventListener('click', addToPalette);
+    dom.toggleMirrorBtn.addEventListener('click', toggleMirrorMode);
+    dom.toggleGridBtn.addEventListener('click', toggleGrid);
+    dom.clearGridBtn.addEventListener('click', clearGrid);
+    dom.saveArtBtn.addEventListener('click', saveArt);
+
+    dom.imageLoader.addEventListener('change', handleImageUpload);
+
     document.querySelectorAll('.tool-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
+        btn.addEventListener('click', function () {
             document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
             this.classList.add('active');
             state.currentTool = this.dataset.tool;
         });
     });
 
-    document.addEventListener('mousedown', function(e) {
+    document.addEventListener('mousedown', function (e) {
         if (e.target.classList.contains('pixel')) {
             state.isDrawing = true;
             handleDrawing(e.target);
         }
     });
 
-    document.addEventListener('mousemove', function(e) {
+    document.addEventListener('mousemove', function (e) {
         if (state.isDrawing && e.target.classList.contains('pixel')) {
             handleDrawing(e.target);
         }
@@ -104,7 +133,7 @@ function setupEventListeners() {
     document.addEventListener('mouseup', stopDrawing);
     document.addEventListener('touchend', stopDrawing);
 
-    document.addEventListener('selectstart', function(e) {
+    document.addEventListener('selectstart', function (e) {
         if (e.target.classList.contains('pixel')) {
             e.preventDefault();
         }
@@ -119,23 +148,13 @@ function startDrawing(e) {
 
 function handleDrawing(pixel) {
     if (!state.isDrawing || !pixel?.classList?.contains('pixel')) return;
-    
+
     applyColor(pixel);
     if (state.mirrorMode.active) applyMirrorEffect(pixel);
 }
 
 function stopDrawing() {
     state.isDrawing = false;
-}
-
-function applySymmetry(pixel) {
-    const index = Array.from(dom.grid.children).indexOf(pixel);
-    const total = dom.grid.children.length;
-    const mirrorIndex = total - 1 - index;
-    
-    if (mirrorIndex >= 0 && mirrorIndex < total) {
-        applyColor(dom.grid.children[mirrorIndex]);
-    }
 }
 
 function applyMirrorEffect(originalPixel) {
@@ -168,7 +187,7 @@ function applyMirrorEffect(originalPixel) {
 
 function applyColor(pixel) {
     if (!pixel) return;
-    
+
     switch (state.currentTool) {
         case 'brush':
             pixel.style.backgroundColor = state.currentColor;
@@ -189,25 +208,25 @@ function applyColor(pixel) {
 function floodFill(startPixel) {
     const targetColor = startPixel.style.backgroundColor;
     if (targetColor === state.currentColor) return;
-    
+
     const queue = [startPixel];
     const visited = new Set();
     const cols = parseInt(document.getElementById('cols').value);
-    
+
     while (queue.length > 0) {
         const current = queue.shift();
         if (!visited.has(current) && current.style.backgroundColor === targetColor) {
             current.style.backgroundColor = state.currentColor;
             visited.add(current);
-            
+
             const index = Array.from(dom.grid.children).indexOf(current);
             const neighbors = [];
-            
+
             if (index % cols > 0) neighbors.push(index - 1); // izquierda
             if (index % cols < cols - 1) neighbors.push(index + 1); // derecha
             if (index >= cols) neighbors.push(index - cols); // arriba
             if (index < dom.grid.children.length - cols) neighbors.push(index + cols); // abajo
-            
+
             neighbors.forEach(idx => {
                 if (!visited.has(dom.grid.children[idx])) {
                     queue.push(dom.grid.children[idx]);
@@ -244,10 +263,10 @@ function deleteColor(colorElement) {
 function handleConfirm(response) {
     dom.confirmDialog.style.display = 'none';
     if (response && state.deleteQueue) {
-        const colorIndex = state.paletas[state.currentPalette].findIndex(c => 
+        const colorIndex = state.paletas[state.currentPalette].findIndex(c =>
             rgbToHex(c) === state.deleteQueue.color || c === state.deleteQueue.color
         );
-        
+
         if (colorIndex > -1) {
             state.paletas[state.currentPalette].splice(colorIndex, 1);
             state.deleteQueue.element.remove();
@@ -260,7 +279,7 @@ function handleConfirm(response) {
 function rgbToHex(rgb) {
     if (!rgb) return '#000000';
     if (rgb.startsWith('#')) return rgb.toLowerCase();
-    
+
     const values = rgb.match(/\d+/g)?.map(Number) || [0, 0, 0];
     return '#' + values.map(x => {
         const hex = x.toString(16).padStart(2, '0');
@@ -273,10 +292,13 @@ function toggleGrid() {
     dom.grid.classList.toggle('grid-visible', state.gridVisible);
 }
 
-function toggleSymmetry() {
-    state.symmetricGrid = !state.symmetricGrid;
-    dom.symmetryStatus.textContent = state.symmetricGrid ? "Desactivar Simetría" : "Activar Simetría";
-    safeUpdateGrid();
+function toggleMirrorMode() {
+    state.mirrorMode.active = !state.mirrorMode.active;
+    dom.toggleMirrorBtn.classList.toggle('active');
+}
+
+function changeMirrorType(type) {
+    state.mirrorMode.type = type;
 }
 
 function adjustZoom(amount) {
@@ -297,7 +319,7 @@ function saveArt() {
     const scale = 20;
     const cols = parseInt(document.getElementById('cols').value);
     const rows = parseInt(document.getElementById('rows').value);
-    
+
     canvas.width = cols * scale;
     canvas.height = rows * scale;
     ctx.imageSmoothingEnabled = false;
@@ -316,7 +338,7 @@ function saveArt() {
 }
 
 function initPalettes() {
-    dom.paletteSelector.innerHTML = Object.keys(state.paletas).map(p => 
+    dom.paletteSelector.innerHTML = Object.keys(state.paletas).map(p =>
         `<option ${p === state.currentPalette ? 'selected' : ''}>${p}</option>`
     ).join('');
     renderPalette();
@@ -337,19 +359,15 @@ function changePalette(name) {
     renderPalette();
 }
 
-const imageLoader = document.getElementById('imageLoader');
-
-imageLoader.addEventListener('change', handleImageUpload);
-
 function handleImageUpload(event) {
     const file = event.target.files[0];
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = function(e) {
+    reader.onload = function (e) {
         const img = new Image();
         img.src = e.target.result;
-        img.onload = function() {
+        img.onload = function () {
             loadImageToGrid(img);
         };
     };
@@ -395,22 +413,6 @@ function renderPalette() {
 
 function savePalettes() {
     localStorage.setItem('paletas', JSON.stringify(state.paletas));
-}
-
-function toggleMirrorMode() {
-    state.mirrorMode.active = !state.mirrorMode.active;
-    document.querySelector('.mirror-controls button').classList.toggle('active');
-}
-
-function changeMirrorType(type) {
-    state.mirrorMode.type = type;
-}
-
-function handleTouchDrawing(e) {
-    e.preventDefault();
-    const touch = e.touches[0];
-    const pixel = document.elementFromPoint(touch.clientX, touch.clientY);
-    handleDrawing(pixel);
 }
 
 function init() {
