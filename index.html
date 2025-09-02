@@ -53,6 +53,14 @@
             </div>
         </div>
 
+        <div class="grid-config">
+            <input type="number" id="cols" value="16" min="8" max="64" onchange="safeUpdateGrid()">
+            <span>x</span>
+            <input type="number" id="rows" value="16" min="8" max="64" onchange="safeUpdateGrid()">
+            </span>
+            <button onclick="safeUpdateGrid()">Actualizar</button>
+        </div>
+
         <div class="panel-controls">
             <div class="mirror-controls">
                 <button onclick="toggleMirrorMode()" class="">
@@ -73,13 +81,6 @@
     <div class="main-area">
         <div id="gridContainer">
             <div id="grid"></div>
-        </div>
-        <div class="grid-config">
-            <input type="number" id="cols" value="16" min="8" max="64" onchange="safeUpdateGrid()">
-            <span>x</span>
-            <input type="number" id="rows" value="16" min="8" max="64" onchange="safeUpdateGrid()">
-            </span>
-            <button onclick="safeUpdateGrid()">Actualizar</button>
         </div>
     </div>
 
