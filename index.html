@@ -2,38 +2,37 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Añadido para responsividad -->
     <title>Pixel Art Studio Pro++</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="custom-confirm" id="confirmDialog" role="dialog" aria-labelledby="confirmDialogTitle" aria-hidden="true">
-        <p id="confirmDialogTitle">¿Seguro que quieres eliminar este color?</p>
+    <div class="custom-confirm" id="confirmDialog">
+        <p>¿Seguro que quieres eliminar este color?</p>
         <div style="display: flex; gap: 10px; margin-top: 15px; justify-content: center;">
-            <button id="confirmYes" aria-label="Confirmar eliminación" type="button">Sí</button>
-            <button id="confirmNo" aria-label="Cancelar eliminación" type="button">No</button>
+            <button onclick="handleConfirm(true)">Sí</button>
+            <button onclick="handleConfirm(false)">No</button>
         </div>
     </div>
 
     <div class="tool-panel">
         <div>
             <div class="color-picker">
-                <div class="color-preview" id="colorPreview" role="presentation"></div>
-                <input type="color" id="colorInput" value="#ff0000" aria-label="Selecciona un color">
+                <div class="color-preview" id="colorPreview"></div>
+                <input type="color" id="colorInput" value="#ff0000">
                 <div class="tools-grid" style="margin-top: 20px;">
-                    <button class="tool-btn active" data-tool="brush" aria-label="Herramienta Pincel">
+                    <button class="tool-btn active" data-tool="brush">
                         <span>🖌️</span>
                         Pincel
                     </button>
-                    <button class="tool-btn" data-tool="eraser" aria-label="Herramienta Borrador">
+                    <button class="tool-btn" data-tool="eraser">
                         <span>🧹</span>
                         Borrador
                     </button>
-                    <button class="tool-btn" data-tool="fill" aria-label="Herramienta Relleno">
+                    <button class="tool-btn" data-tool="fill">
                         <span>🎨</span>
                         Relleno
                     </button>
-                    <button class="tool-btn" data-tool="picker" aria-label="Herramienta Selector">
+                    <button class="tool-btn" data-tool="picker">
                         <span>👆</span>
                         Selector
                     </button>
@@ -41,60 +40,53 @@
             </div>
 
             <div class="color-picker">
-                <div class="palette-selector">
-                    <button id="newPaletteBtn" aria-label="Crear nueva paleta" type="button">Nueva</button>
-                    <select id="paletteSelector" aria-label="Selecciona una paleta" onchange="changePalette(this.value)"></select>
+                <div class="paleta-selector">
+                    <button onclick="newPalette()">Nueva</button>
+                    <select id="paletteSelector" onchange="changePalette(this.value)"></select>
                 </div>
-                <div class="palette-container">
+                <div class="paleta-container">
                     <div id="colorPalette" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;"></div>
                 </div>
-                <button id="addToPaletteBtn" aria-label="Añadir color a la paleta" type="button" style="margin-top: 15px; width: 100%;">
+                <button onclick="addToPalette()" style="margin-top: 15px; width: 100%;">
                     Añadir a paleta
                 </button>
             </div>
         </div>
-        <div class="GridOptions">
-            <input type="number" id="cols" value="16" min="8" max="64" onchange="safeUpdateGrid()" aria-label="Número de columnas">
-
-            <span>x</span>
-
-            <input type="number" id="rows" value="16" min="8" max="64" onchange="safeUpdateGrid()" aria-label="Número de filas">
-
-            <button onclick="safeUpdateGrid()" aria-label="Actualizar cuadrícula">Actualizar</button>
-        </div>
 
         <div class="panel-controls">
             <div class="mirror-controls">
-                <button id="toggleMirrorBtn" aria-label="Activar/Desactivar Modo Espejo" type="button">
+                <button onclick="toggleMirrorMode()" class="">
                     🪞 Modo Espejo
                 </button>
-                <select id="mirrorTypeSelector" aria-label="Selecciona tipo de espejo" onchange="changeMirrorType(this.value)">
+                <select onchange="changeMirrorType(this.value)">
                     <option value="vertical">Vertical</option>
                     <option value="horizontal">Horizontal</option>
                     <option value="diagonal">Diagonal</option>
                 </select>
             </div>
-
-            <button id="toggleGridBtn" aria-label="Activar/Desactivar Grid" type="button">🔲 Grid</button>
-            <button id="clearGridBtn" aria-label="Limpiar cuadrícula" type="button">🧹 Limpiar</button>
-            <button id="saveArtBtn" aria-label="Guardar arte" type="button">💾 Guardar</button>
-        </div>
-
-        <!-- Input para cargar imágenes -->
-        <div class="image-loader">
-            <input type="file" id="imageLoader" accept="image/*" aria-label="Cargar imagen" style="margin-top: 15px; width: 100%;">
+            <button onclick="toggleGrid()">🔲 Grid</button>
+            <button onclick="clearGrid()">🧹 Limpiar</button>
+            <button onclick="saveArt()">💾 Guardar</button>
         </div>
     </div>
 
     <div class="main-area">
         <div id="gridContainer">
-            <div id="grid" role="grid"></div>
+            <div id="grid"></div>
+        </div>
+        <div class="grid-config">
+            <input type="number" id="cols" value="16" min="8" max="64" onchange="safeUpdateGrid()">
+            <span>x</span>
+            <input type="number" id="rows" value="16" min="8" max="64" onchange="safeUpdateGrid()">
+            </span>
+            <button onclick="safeUpdateGrid()">Actualizar</button>
+        </div>
     </div>
 
     <div class="zoom-controls">
-        <button onclick="adjustZoom(-0.1)" aria-label="Disminuir zoom">➖</button>
-        <span id="zoomLevel" aria-live="polite">100%</span>
-        <button onclick="adjustZoom(0.1)" aria-label="Aumentar zoom">➕</button>
+        <button onclick="adjustZoom(-0.1)">➖</button>
+        <span id="zoomLevel">100%</span>
+        <button onclick="adjustZoom(0.1)">➕</button>
     </div>
 
     <script src="app.js"></script>
