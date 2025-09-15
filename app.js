@@ -1,4 +1,3 @@
-// app.js
 let lastValidState = {
     rows: 16,
     cols: 16
@@ -24,7 +23,18 @@ const dom = {
     colorPreview: document.getElementById('colorPreview'),
     confirmDialog: document.getElementById('confirmDialog'),
     paletteSelector: document.getElementById('paletteSelector'),
-    zoomLevel: document.getElementById('zoomLevel')
+    zoomLevel: document.getElementById('zoomLevel'),
+    symmetryStatus: document.getElementById('symmetryStatus'),
+    confirmYes: document.getElementById('confirmYes'),
+    confirmNo: document.getElementById('confirmNo'),
+    newPaletteBtn: document.getElementById('newPaletteBtn'),
+    addToPaletteBtn: document.getElementById('addToPaletteBtn'),
+    toggleMirrorBtn: document.getElementById('toggleMirrorBtn'),
+    toggleGridBtn: document.getElementById('toggleGridBtn'),
+    clearGridBtn: document.getElementById('clearGridBtn'),
+    saveArtBtn: document.getElementById('saveArtBtn'),
+    imageLoader: document.getElementById('imageLoader'),
+    mirrorTypeSelector: document.getElementById('mirrorTypeSelector')
 };
 
 function safeUpdateGrid() {
@@ -34,27 +44,25 @@ function safeUpdateGrid() {
 
         dom.grid.style.gridTemplateColumns = `repeat(${cols}, 20px)`;
         dom.grid.className = state.gridVisible ? 'grid-visible' : '';
-        
+
         const fragment = document.createDocumentFragment();
-        for(let i = 0; i < rows * cols; i++) {
+        for (let i = 0; i < rows * cols; i++) {
             fragment.appendChild(createPixel());
         }
-        
+
         dom.grid.innerHTML = '';
         dom.grid.appendChild(fragment);
         state.isDrawing = false;
 
-        lastValidState = {
-            rows: rows,
-            cols: cols
-        };
+        lastValidState = { rows, cols };
 
         dom.grid.style.display = 'none';
-        dom.grid.offsetHeight;
+        dom.grid.offsetHeight; // Forzar el reflow
         dom.grid.style.display = 'grid';
-        
+
     } catch (error) {
-        console.error('Error:', error);
+        console.error('Error al actualizar la cuadrícula:', error);
+        alert('Error al actualizar la cuadrícula. Se restaurarán los valores anteriores.');
         document.getElementById('rows').value = lastValidState.rows;
         document.getElementById('cols').value = lastValidState.cols;
         safeUpdateGrid();
@@ -65,13 +73,22 @@ function createPixel() {
     const pixel = document.createElement('div');
     pixel.className = 'pixel';
     pixel.draggable = false;
-    
+
     pixel.addEventListener('mousedown', startDrawing);
     pixel.addEventListener('mousemove', handleDrawing);
     pixel.addEventListener('touchstart', startDrawing);
     pixel.addEventListener('touchmove', handleTouchDrawing);
-    
+
     return pixel;
+}
+
+function handleTouchDrawing(e) {
+    e.preventDefault();
+    const touch = e.touches[0];
+    const pixel = document.elementFromPoint(touch.clientX, touch.clientY);
+    if (pixel?.classList?.contains('pixel')) {
+        handleDrawing(pixel);
+    }
 }
 
 function setupEventListeners() {
@@ -80,22 +97,34 @@ function setupEventListeners() {
         updateColorPreview();
     });
 
+    dom.confirmYes.addEventListener('click', () => handleConfirm(true));
+    dom.confirmNo.addEventListener('click', () => handleConfirm(false));
+
+    dom.newPaletteBtn.addEventListener('click', newPalette);
+    dom.addToPaletteBtn.addEventListener('click', addToPalette);
+    dom.toggleMirrorBtn.addEventListener('click', toggleMirrorMode);
+    dom.toggleGridBtn.addEventListener('click', toggleGrid);
+    dom.clearGridBtn.addEventListener('click', clearGrid);
+    dom.saveArtBtn.addEventListener('click', saveArt);
+
+    dom.imageLoader.addEventListener('change', handleImageUpload);
+
     document.querySelectorAll('.tool-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
+        btn.addEventListener('click', function () {
             document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
             this.classList.add('active');
             state.currentTool = this.dataset.tool;
         });
     });
 
-    document.addEventListener('mousedown', function(e) {
+    document.addEventListener('mousedown', function (e) {
         if (e.target.classList.contains('pixel')) {
             state.isDrawing = true;
             handleDrawing(e.target);
         }
     });
 
-    document.addEventListener('mousemove', function(e) {
+    document.addEventListener('mousemove', function (e) {
         if (state.isDrawing && e.target.classList.contains('pixel')) {
             handleDrawing(e.target);
         }
@@ -104,7 +133,7 @@ function setupEventListeners() {
     document.addEventListener('mouseup', stopDrawing);
     document.addEventListener('touchend', stopDrawing);
 
-    document.addEventListener('selectstart', function(e) {
+    document.addEventListener('selectstart', function (e) {
         if (e.target.classList.contains('pixel')) {
             e.preventDefault();
         }
@@ -118,25 +147,14 @@ function startDrawing(e) {
 }
 
 function handleDrawing(pixel) {
-    if(!state.isDrawing || !pixel?.classList?.contains('pixel')) return;
-    
+    if (!state.isDrawing || !pixel?.classList?.contains('pixel')) return;
+
     applyColor(pixel);
-    if(state.mirrorMode.active) applyMirrorEffect(pixel);
-    if(state.symmetricGrid) applySymmetry(pixel);
+    if (state.mirrorMode.active) applyMirrorEffect(pixel);
 }
 
 function stopDrawing() {
     state.isDrawing = false;
-}
-
-function applySymmetry(pixel) {
-    const index = Array.from(dom.grid.children).indexOf(pixel);
-    const total = dom.grid.children.length;
-    const mirrorIndex = total - 1 - index;
-    
-    if(mirrorIndex >= 0 && mirrorIndex < total) {
-        applyColor(dom.grid.children[mirrorIndex]);
-    }
 }
 
 function applyMirrorEffect(originalPixel) {
@@ -145,7 +163,7 @@ function applyMirrorEffect(originalPixel) {
     const rows = parseInt(document.getElementById('rows').value);
     const mirrorIndices = [];
 
-    switch(state.mirrorMode.type) {
+    switch (state.mirrorMode.type) {
         case 'vertical':
             mirrorIndices.push(Math.floor(index / cols) * cols + (cols - 1 - (index % cols)));
             break;
@@ -161,16 +179,16 @@ function applyMirrorEffect(originalPixel) {
     }
 
     mirrorIndices.forEach(idx => {
-        if(dom.grid.children[idx]) {
+        if (dom.grid.children[idx]) {
             applyColor(dom.grid.children[idx]);
         }
     });
 }
 
 function applyColor(pixel) {
-    if(!pixel) return;
-    
-    switch(state.currentTool) {
+    if (!pixel) return;
+
+    switch (state.currentTool) {
         case 'brush':
             pixel.style.backgroundColor = state.currentColor;
             break;
@@ -189,28 +207,28 @@ function applyColor(pixel) {
 
 function floodFill(startPixel) {
     const targetColor = startPixel.style.backgroundColor;
-    if(targetColor === state.currentColor) return;
-    
+    if (targetColor === state.currentColor) return;
+
     const queue = [startPixel];
     const visited = new Set();
     const cols = parseInt(document.getElementById('cols').value);
-    
-    while(queue.length > 0) {
+
+    while (queue.length > 0) {
         const current = queue.shift();
-        if(!visited.has(current) && current.style.backgroundColor === targetColor) {
+        if (!visited.has(current) && current.style.backgroundColor === targetColor) {
             current.style.backgroundColor = state.currentColor;
             visited.add(current);
-            
+
             const index = Array.from(dom.grid.children).indexOf(current);
             const neighbors = [];
-            
-            if(index % cols > 0) neighbors.push(index - 1);
-            if(index % cols < cols - 1) neighbors.push(index + 1);
-            if(index >= cols) neighbors.push(index - cols);
-            if(index < dom.grid.children.length - cols) neighbors.push(index + cols);
-            
+
+            if (index % cols > 0) neighbors.push(index - 1); // izquierda
+            if (index % cols < cols - 1) neighbors.push(index + 1); // derecha
+            if (index >= cols) neighbors.push(index - cols); // arriba
+            if (index < dom.grid.children.length - cols) neighbors.push(index + cols); // abajo
+
             neighbors.forEach(idx => {
-                if(!visited.has(dom.grid.children[idx])) {
+                if (!visited.has(dom.grid.children[idx])) {
                     queue.push(dom.grid.children[idx]);
                 }
             });
@@ -223,8 +241,8 @@ function updateColorPreview() {
 }
 
 function addToPalette() {
-    const hexColor = rgbToHex(state.currentColor);
-    if(!state.paletas[state.currentPalette].includes(hexColor)) {
+    const hexColor = state.currentColor.toLowerCase();
+    if (!state.paletas[state.currentPalette].includes(hexColor)) {
         state.paletas[state.currentPalette].push(hexColor);
         renderPalette();
         savePalettes();
@@ -232,25 +250,26 @@ function addToPalette() {
 }
 
 function deleteColor(colorElement) {
+    const colorStyle = colorElement.querySelector('.color-swatch').style.backgroundColor;
     state.deleteQueue = {
         element: colorElement,
-        color: rgbToHex(colorElement.querySelector('.color-swatch').style.backgroundColor)
+        color: rgbToHex(colorStyle) // Usa la función mejorada para asegurar el formato correcto
     };
     const rect = document.querySelector('.color-picker').getBoundingClientRect();
     dom.confirmDialog.style.top = `${rect.bottom + 10}px`;
-    dom.confirmDialog.style.left = `${rect.left + (rect.width/2 - 100)}px`;
+    dom.confirmDialog.style.left = `${rect.left + (rect.width / 2 - 100)}px`;
     dom.confirmDialog.style.display = 'block';
 }
 
 function handleConfirm(response) {
     dom.confirmDialog.style.display = 'none';
-    if(response && state.deleteQueue) {
-        const colorIndex = state.paletas[state.currentPalette].findIndex(c => 
-            rgbToHex(c) === state.deleteQueue.color || c === state.deleteQueue.color
-        );
-        
-        if(colorIndex > -1) {
-            state.paletas[state.currentPalette].splice(colorIndex, 1);
+    if (response && state.deleteQueue) {
+        const colorToDelete = state.deleteQueue.color;
+        const palette = state.paletas[state.currentPalette];
+        const colorIndex = palette.findIndex(c => c.toLowerCase() === colorToDelete.toLowerCase());
+
+        if (colorIndex > -1) {
+            palette.splice(colorIndex, 1);
             state.deleteQueue.element.remove();
             savePalettes();
         }
@@ -259,10 +278,13 @@ function handleConfirm(response) {
 }
 
 function rgbToHex(rgb) {
-    if (!rgb) return '#000000';
-    if (rgb.startsWith('#')) return rgb.toLowerCase();
-    
-    const values = rgb.match(/\d+/g)?.map(Number) || [0,0,0];
+    if (!rgb || rgb === 'rgba(0, 0, 0, 0)') {
+        return '#ffffff'; // Devuelve blanco o un valor predeterminado si es transparente
+    }
+    if (rgb.startsWith('#')) {
+        return rgb.toLowerCase();
+    }
+    const values = rgb.match(/\d+/g)?.map(Number) || [0, 0, 0];
     return '#' + values.map(x => {
         const hex = x.toString(16);
         return hex.length === 1 ? '0' + hex : hex;
@@ -274,10 +296,13 @@ function toggleGrid() {
     dom.grid.classList.toggle('grid-visible', state.gridVisible);
 }
 
-function toggleSymmetry() {
-    state.symmetricGrid = !state.symmetricGrid;
-    dom.symmetryStatus.textContent = state.symmetricGrid ? "Desactivar Simetria" : "Activar Simetria";
-    safeUpdateGrid();
+function toggleMirrorMode() {
+    state.mirrorMode.active = !state.mirrorMode.active;
+    dom.toggleMirrorBtn.classList.toggle('active');
+}
+
+function changeMirrorType(type) {
+    state.mirrorMode.type = type;
 }
 
 function adjustZoom(amount) {
@@ -298,26 +323,41 @@ function saveArt() {
     const scale = 20;
     const cols = parseInt(document.getElementById('cols').value);
     const rows = parseInt(document.getElementById('rows').value);
-    
+
     canvas.width = cols * scale;
     canvas.height = rows * scale;
     ctx.imageSmoothingEnabled = false;
 
+    // Habilitar la transparencia en el contexto del canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
     document.querySelectorAll('.pixel').forEach((pixel, index) => {
         const x = (index % cols) * scale;
         const y = Math.floor(index / cols) * scale;
-        ctx.fillStyle = pixel.style.backgroundColor || '#FFFFFF';
+        
+        // Convertir el color a formato RGB o RGBA
+        const pixelColor = pixel.style.backgroundColor;
+
+        // Si el píxel está vacío o es blanco, se dibuja como transparente
+        if (!pixelColor || pixelColor.toLowerCase() === 'rgb(255, 255, 255)' || pixelColor.toLowerCase() === '#ffffff') {
+            // Establece el color de relleno en transparente
+            ctx.fillStyle = 'rgba(0, 0, 0, 0)'; 
+        } else {
+            // De lo contrario, usa el color del píxel
+            ctx.fillStyle = pixelColor;
+        }
+
         ctx.fillRect(x, y, scale, scale);
     });
 
     const link = document.createElement('a');
     link.download = `pixel-art-${Date.now()}.png`;
-    link.href = canvas.toDataURL();
+    link.href = canvas.toDataURL('image/png'); // Asegura que el formato es PNG
     link.click();
 }
 
 function initPalettes() {
-    dom.paletteSelector.innerHTML = Object.keys(state.paletas).map(p => 
+    dom.paletteSelector.innerHTML = Object.keys(state.paletas).map(p =>
         `<option ${p === state.currentPalette ? 'selected' : ''}>${p}</option>`
     ).join('');
     renderPalette();
@@ -325,7 +365,7 @@ function initPalettes() {
 
 function newPalette() {
     const name = prompt('Nombre de la nueva paleta:');
-    if(name && !state.paletas[name]) {
+    if (name && !state.paletas[name]) {
         state.paletas[name] = [];
         state.currentPalette = name;
         initPalettes();
@@ -338,34 +378,70 @@ function changePalette(name) {
     renderPalette();
 }
 
+function handleImageUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function (e) {
+        const img = new Image();
+        img.src = e.target.result;
+        img.onload = function () {
+            loadImageToGrid(img);
+        };
+    };
+    reader.readAsDataURL(file);
+}
+
+function loadImageToGrid(image) {
+    const cols = parseInt(document.getElementById('cols').value);
+    const rows = parseInt(document.getElementById('rows').value);
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+
+    // Ajustar el tamaño del canvas a la cuadrícula
+    canvas.width = cols;
+    canvas.height = rows;
+    ctx.drawImage(image, 0, 0, cols, rows);
+
+    // Obtener los datos de píxeles
+    const imageData = ctx.getImageData(0, 0, cols, rows);
+    const pixels = imageData.data;
+
+    // Limpiar la cuadrícula existente
+    dom.grid.innerHTML = '';
+
+    // Crear los píxeles en la cuadrícula
+    for (let i = 0; i < pixels.length; i += 4) {
+        const pixel = createPixel();
+        const color = `rgba(${pixels[i]}, ${pixels[i + 1]}, ${pixels[i + 2]}, ${pixels[i + 3] / 255})`;
+        pixel.style.backgroundColor = color;
+        dom.grid.appendChild(pixel);
+    }
+}
+
 function renderPalette() {
     const container = document.getElementById('colorPalette');
     container.innerHTML = state.paletas[state.currentPalette].map(color => `
         <div class="color-swatch-container">
-            <div class="color-swatch" style="background: ${color}"></div>
+            <div 
+                class="color-swatch" 
+                style="background: ${color}"
+                onclick="selectColor('${color}')"
+            ></div>
             <div class="delete-color" onclick="deleteColor(this.parentElement)"></div>
         </div>
     `).join('');
 }
 
+function selectColor(color) {
+    state.currentColor = color;
+    dom.colorInput.value = color; // Actualiza el input de color para que coincida
+    updateColorPreview();
+}
+
 function savePalettes() {
     localStorage.setItem('paletas', JSON.stringify(state.paletas));
-}
-
-function toggleMirrorMode() {
-    state.mirrorMode.active = !state.mirrorMode.active;
-    document.querySelector('.mirror-controls button').classList.toggle('active');
-}
-
-function changeMirrorType(type) {
-    state.mirrorMode.type = type;
-}
-
-function handleTouchDrawing(e) {
-    e.preventDefault();
-    const touch = e.touches[0];
-    const pixel = document.elementFromPoint(touch.clientX, touch.clientY);
-    handleDrawing(pixel);
 }
 
 function init() {
