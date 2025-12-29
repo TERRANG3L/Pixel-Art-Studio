@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Añadido para responsividad -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pixel Art Studio Pro++</title>
     <link rel="stylesheet" href="styles.css">
 </head>
@@ -80,17 +80,17 @@
             <button id="saveArtBtn" aria-label="Guardar arte" type="button">💾 Guardar</button>
         </div>
 
-        <!-- Input para cargar imágenes -->
         <div class="image-loader">
-            <input type="file" id="imageLoader" accept="image/*" aria-label="Cargar imagen" style="margin-top: 15px; width: 100%;">
+            <label for="imageLoader" class="file-btn" aria-hidden="false">Seleccionar archivo</label>
+            <input type="file" id="imageLoader" accept="image/*" aria-label="Cargar imagen">
         </div>
     </div>
 
     <div class="main-area">
         <div id="gridContainer">
             <div id="grid" role="grid"></div>
+        </div>
     </div>
-
     <div class="zoom-controls">
         <button onclick="adjustZoom(-0.1)" aria-label="Disminuir zoom">➖</button>
         <span id="zoomLevel" aria-live="polite">100%</span>
